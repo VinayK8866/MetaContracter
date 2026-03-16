@@ -7,7 +7,7 @@ export async function POST(req: Request) {
 
 	try {
 		const { object } = await generateObject({
-			model: google('gemini-pro-latest'),
+			model: google('gemini-1.5-flash-latest'),
 			schema: z.object({
 				questions: z
 					.array(z.string())

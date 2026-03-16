@@ -3,15 +3,17 @@
 import { useStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { ArrowRight, Check, Copy, FileText, Sparkles } from 'lucide-react';
+import { ArrowRight, Check, Copy, FileText, Sparkles, Clock } from 'lucide-react';
 import { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
+import { useCooldown } from '@/hooks/useCooldown';
 
 export function ConstitutionViewer({ onNext, onBack }: { onNext: () => void; onBack: () => void }) {
 	const { constitution } = useStore();
 	const [copied, setCopied] = useState(false);
 	const [isGeneratingRoadmap, setIsGeneratingRoadmap] = useState(false);
 	const [error, setError] = useState<string | null>(null);
+	const { isCooldownActive, remainingTime, startCooldown } = useCooldown();
 
 	const handleCopy = () => {
 		navigator.clipboard.writeText(constitution);
@@ -40,6 +42,7 @@ export function ConstitutionViewer({ onNext, onBack }: { onNext: () => void; onB
 				throw new Error('Invalid response format from AI');
 			}
 
+			startCooldown();
 			useStore.getState().setRoadmapTasks(data.tasks);
 			onNext();
 		} catch (err: any) {
@@ -105,12 +108,16 @@ export function ConstitutionViewer({ onNext, onBack }: { onNext: () => void; onB
 				<Button
 					size="lg"
 					onClick={generateRoadmap}
-					disabled={isGeneratingRoadmap}
-					className="bg-blue-600 hover:bg-blue-700 text-white rounded-full px-8 shadow-lg shadow-blue-500/20"
+					disabled={isGeneratingRoadmap || isCooldownActive}
+					className="bg-blue-600 hover:bg-blue-700 text-white rounded-full px-8 shadow-lg shadow-blue-500/20 min-w-[240px]"
 				>
 					{isGeneratingRoadmap ? (
 						<>
 							<Sparkles className="h-4 w-4 mr-2 animate-spin" /> Analyzing Roadmap...
+						</>
+					) : isCooldownActive ? (
+						<>
+							<Clock className="h-4 w-4 mr-2 animate-pulse" /> Rate Limit Protection ({remainingTime}s)
 						</>
 					) : (
 						<>

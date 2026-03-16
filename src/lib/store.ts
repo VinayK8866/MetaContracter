@@ -34,6 +34,9 @@ export interface ArchitectState {
 	updateTaskStatus: (taskId: string, status: 'pending' | 'done') => void;
 	setTaskContract: (taskId: string, contract: Contract) => void;
 
+	lastRequestTime: number | null;
+	setLastRequestTime: (time: number | null) => void;
+
 	resetStore: () => void;
 }
 
@@ -43,6 +46,7 @@ const initialState = {
 	answers: {},
 	constitution: '',
 	roadmapTasks: [],
+	lastRequestTime: null,
 };
 
 export const useStore = create<ArchitectState>()(
@@ -73,6 +77,8 @@ export const useStore = create<ArchitectState>()(
 						task.id === taskId ? { ...task, contract } : task
 					)
 				})),
+
+			setLastRequestTime: (lastRequestTime) => set({ lastRequestTime }),
 
 			resetStore: () => set(initialState),
 		}),

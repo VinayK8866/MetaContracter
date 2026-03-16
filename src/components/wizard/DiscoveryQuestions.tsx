@@ -7,13 +7,15 @@ import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Textarea } from '@/components/ui/textarea';
-import { Sparkles, ArrowRight } from 'lucide-react';
+import { Sparkles, ArrowRight, Clock } from 'lucide-react';
 import { useState } from 'react';
+import { useCooldown } from '@/hooks/useCooldown';
 
 export function DiscoveryQuestions({ onNext, onBack }: { onNext: () => void; onBack: () => void }) {
 	const { questions, setAnswers, answers } = useStore();
 	const [isGenerating, setIsGenerating] = useState(false);
 	const [error, setError] = useState<string | null>(null);
+	const { isCooldownActive, remainingTime, startCooldown } = useCooldown();
 
 	const safeQuestions = questions || [];
 
@@ -62,6 +64,7 @@ export function DiscoveryQuestions({ onNext, onBack }: { onNext: () => void; onB
 				throw new Error('Invalid response from AI');
 			}
 
+			startCooldown();
 			useStore.getState().setConstitution(data.constitution);
 			onNext();
 		} catch (error: any) {
@@ -129,12 +132,16 @@ export function DiscoveryQuestions({ onNext, onBack }: { onNext: () => void; onB
 						<Button
 							type="submit"
 							size="lg"
-							className="bg-blue-600 hover:bg-blue-700 text-white gap-2 font-medium"
-							disabled={isGenerating}
+							className="bg-blue-600 hover:bg-blue-700 text-white gap-2 font-medium min-w-[200px]"
+							disabled={isGenerating || isCooldownActive}
 						>
 							{isGenerating ? (
 								<>
 									<Sparkles className="h-4 w-4 animate-spin" /> Drafting CLAUDE.md...
+								</>
+							) : isCooldownActive ? (
+								<>
+									<Clock className="h-4 w-4 animate-pulse" /> Wait {remainingTime}s...
 								</>
 							) : (
 								<>

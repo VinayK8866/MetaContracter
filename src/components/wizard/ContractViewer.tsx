@@ -3,29 +3,30 @@
 import { useStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Check, Copy, ArrowLeft, Terminal } from 'lucide-react';
+import { Check, Copy, ArrowLeft, Terminal, Clock } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { useCooldown } from '@/hooks/useCooldown';
 
 export function ContractViewer({ onBack, selectedTaskId }: { onBack: () => void; selectedTaskId: string | null }) {
 	const { roadmapTasks, constitution, updateTaskStatus, setTaskContract } = useStore();
 	const [isGenerating, setIsGenerating] = useState(false);
 	const [copied, setCopied] = useState(false);
 	const [error, setError] = useState<string | null>(null);
+	const { isCooldownActive, remainingTime, startCooldown } = useCooldown();
 
-	// Find the first pending task
-	// Use selectedTaskId if provided, otherwise find the first pending task
+	// Find the current task
 	const currentTask = selectedTaskId
 		? roadmapTasks.find(t => t.id === selectedTaskId)
 		: roadmapTasks.find(t => t.status === 'pending');
 
 	useEffect(() => {
-		if (currentTask && !currentTask.contract && !isGenerating) {
+		if (currentTask && !currentTask.contract && !isGenerating && !isCooldownActive) {
 			generateContract();
 		}
-	}, [currentTask]);
+	}, [currentTask, isCooldownActive]);
 
 	const generateContract = async () => {
-		if (!currentTask) return;
+		if (!currentTask || isCooldownActive) return;
 		setIsGenerating(true);
 		setError(null);
 		try {
@@ -44,6 +45,7 @@ export function ContractViewer({ onBack, selectedTaskId }: { onBack: () => void;
 				throw new Error('Gemini returned an incomplete contract. Please try again.');
 			}
 
+			startCooldown();
 			setTaskContract(currentTask.id, data);
 		} catch (err: any) {
 			console.error(err);
@@ -125,6 +127,12 @@ ${currentTask.contract.failureConditions}
 					{isGenerating ? (
 						<div className="flex items-center justify-center h-full animate-pulse text-blue-400">
 							Generating watertight contract constraints...
+						</div>
+					) : isCooldownActive && !currentTask.contract ? (
+						<div className="flex flex-col items-center justify-center h-full text-amber-400 space-y-4">
+							<Clock className="h-8 w-8 animate-pulse" />
+							<p>Rate Limit Protection: Waiting {remainingTime}s before generating...</p>
+							<p className="text-xs text-muted-foreground">This ensures we don't hit Gemini's API limits.</p>
 						</div>
 					) : error ? (
 						<div className="flex flex-col items-center justify-center h-full text-red-400 space-y-4">

@@ -4,15 +4,17 @@ import { useState } from 'react';
 import { useStore } from '@/lib/store';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, Clock } from 'lucide-react';
+import { useCooldown } from '@/hooks/useCooldown';
 
 export function VibeInput({ onNext }: { onNext: () => void }) {
 	const { vibe, setVibe } = useStore();
 	const [isGenerating, setIsGenerating] = useState(false);
 	const [error, setError] = useState<string | null>(null);
+	const { isCooldownActive, remainingTime, startCooldown } = useCooldown();
 
 	const handleSubmit = async () => {
-		if (!vibe.trim()) return;
+		if (!vibe.trim() || isCooldownActive) return;
 		setIsGenerating(true);
 		setError(null);
 
@@ -34,6 +36,7 @@ export function VibeInput({ onNext }: { onNext: () => void }) {
 				throw new Error('Invalid response format from AI');
 			}
 
+			startCooldown();
 			useStore.getState().setQuestions(data.questions);
 			onNext();
 		} catch (error: any) {
@@ -76,12 +79,16 @@ export function VibeInput({ onNext }: { onNext: () => void }) {
 					<Button
 						size="lg"
 						onClick={handleSubmit}
-						disabled={!vibe.trim() || isGenerating}
-						className="rounded-full px-8 bg-blue-600 hover:bg-blue-700 text-white font-medium"
+						disabled={!vibe.trim() || isGenerating || isCooldownActive}
+						className="rounded-full px-8 bg-blue-600 hover:bg-blue-700 text-white font-medium min-w-[200px]"
 					>
 						{isGenerating ? (
 							<span className="flex items-center gap-2">
 								<Sparkles className="h-5 w-5 animate-spin" /> Analyzing Vibe...
+							</span>
+						) : isCooldownActive ? (
+							<span className="flex items-center gap-2">
+								<Clock className="h-5 w-5 animate-pulse" /> Rate Limit Protection ({remainingTime}s)
 							</span>
 						) : (
 							<span className="flex items-center gap-2">

@@ -13,7 +13,7 @@ export async function POST(req: Request) {
 
 	try {
 		const { object } = await generateObject({
-			model: google('gemini-flash-latest'),
+			model: google('gemini-1.5-flash-latest'),
 			schema: z.object({
 				constitution: z.string().describe('The CLAUDE.md markdown content.'),
 			}),
