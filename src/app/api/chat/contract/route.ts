@@ -7,7 +7,7 @@ export async function POST(req: Request) {
 
 	try {
 		const { object } = await generateObject({
-			model: google('gemini-2.5-flash-latest'),
+			model: google('gemini-3-flash-preview'),
 			schema: z.object({
 				goal: z.string().describe('The primary objective of this specific task.'),
 				constraints: z.string().describe('Strict rules, boundaries, and what NOT to do based on the CLAUDE.md context.'),
