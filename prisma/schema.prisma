@@ -1,0 +1,19 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Project {
+  id              String   @id @default(cuid())
+  name            String?
+  vibe            String?
+  questions       String?   // JSON stringified string[]
+  answers         String?   // JSON stringified Record<string, string>
+  constitution    String?
+  roadmapTasks    String?   // JSON stringified RoadmapTask[]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}

@@ -8,6 +8,7 @@ import { DiscoveryQuestions } from './DiscoveryQuestions';
 import { ConstitutionViewer } from './ConstitutionViewer';
 import { RoadmapViewer } from './RoadmapViewer';
 import { ContractViewer } from './ContractViewer';
+import { ProjectHistory } from './ProjectHistory';
 
 export function WizardContainer() {
 	const [currentStep, setCurrentStep] = useState(0);
@@ -29,6 +30,11 @@ export function WizardContainer() {
 	const handleBack = () => setCurrentStep(currentStep - 1);
 	const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
 
+	const handleProjectLoad = (step: number) => {
+		setCurrentStep(step);
+		setSelectedTaskId(null);
+	};
+
 	const handleViewContract = (taskId: string) => {
 		setSelectedTaskId(taskId);
 		setCurrentStep(4);
@@ -44,9 +50,10 @@ export function WizardContainer() {
 			<header className="absolute top-0 left-0 right-0 p-6 flex justify-between items-center text-sm font-medium border-b border-border/40 bg-background/80 backdrop-blur-md z-50">
 				<div className="flex items-center gap-3">
 					<div className="h-8 w-8 rounded-lg bg-gradient-to-br from-blue-600 to-emerald-500 flex items-center justify-center text-white font-bold shadow-lg shadow-blue-500/20">A</div>
-					<span className="font-semibold tracking-tight text-lg">The Architect</span>
+					<span className="font-semibold tracking-tight text-lg underline decoration-blue-500/30">The Architect</span>
 				</div>
 				<div className="flex items-center gap-4">
+					<ProjectHistory onProjectLoad={handleProjectLoad} />
 					<span className="text-muted-foreground hidden sm:block">Framework: Prompt Contract</span>
 					<Button 
 						variant="ghost" 

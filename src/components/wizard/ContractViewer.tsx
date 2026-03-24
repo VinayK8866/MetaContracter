@@ -82,11 +82,27 @@ ${currentTask.contract.failureConditions}
 		setTimeout(() => setCopied(false), 2000);
 	};
 
-	const handleDone = () => {
+	const handleDone = async () => {
 		if (currentTask) {
+			const state = useStore.getState();
 			if (currentTask.status === 'pending') {
 				updateTaskStatus(currentTask.id, 'done');
 			}
+			
+			// Save the updated roadmap (including status and the new contract)
+			try {
+				await fetch('/api/projects', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({
+						id: state.currentProjectId,
+						roadmapTasks: useStore.getState().roadmapTasks, // Get updated tasks
+					}),
+				});
+			} catch (dbError) {
+				console.error('Failed to update project status:', dbError);
+			}
+			
 			onBack();
 		}
 	};

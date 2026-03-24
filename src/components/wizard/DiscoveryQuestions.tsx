@@ -65,7 +65,33 @@ export function DiscoveryQuestions({ onNext, onBack }: { onNext: () => void; onB
 			}
 
 			startCooldown();
-			useStore.getState().setConstitution(data.constitution);
+			const state = useStore.getState();
+			state.setConstitution(data.constitution);
+
+			// Save to database
+			try {
+				const projectRes = await fetch('/api/projects', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({
+						id: state.currentProjectId,
+						vibe: state.vibe,
+						questions: state.questions,
+						answers: answersMap,
+						constitution: data.constitution,
+						name: state.vibe.slice(0, 30) + (state.vibe.length > 30 ? '...' : '') || 'Untitled Project',
+					}),
+				});
+
+				if (projectRes.ok) {
+					const projectData = await projectRes.json();
+					state.setCurrentProjectId(projectData.id);
+				}
+			} catch (dbError) {
+				console.error('Failed to save project to DB:', dbError);
+				// We don't block the UI if DB save fails, but we log it
+			}
+
 			onNext();
 		} catch (error: any) {
 			console.error('Failed to generate constitution:', error);

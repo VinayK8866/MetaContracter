@@ -43,7 +43,23 @@ export function ConstitutionViewer({ onNext, onBack }: { onNext: () => void; onB
 			}
 
 			startCooldown();
-			useStore.getState().setRoadmapTasks(data.tasks);
+			const state = useStore.getState();
+			state.setRoadmapTasks(data.tasks);
+
+			// Update database with roadmap tasks
+			try {
+				await fetch('/api/projects', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({
+						id: state.currentProjectId,
+						roadmapTasks: data.tasks,
+					}),
+				});
+			} catch (dbError) {
+				console.error('Failed to update project with roadmap:', dbError);
+			}
+
 			onNext();
 		} catch (err: any) {
 			console.error("Failed to generate roadmap", err);
